@@ -8,6 +8,19 @@ import {
   type YearType,
 } from '../engine/premiumEngine';
 
+interface Section1Props {
+  sumInsuredText: string;
+  setSumInsuredText: (v: string) => void;
+  book: CalculationBook | '';
+  setBook: (v: CalculationBook | '') => void;
+  yearType: YearType | '';
+  setYearType: (v: YearType | '') => void;
+  startDate: string;
+  setStartDate: (v: string) => void;
+  endDate: string;
+  setEndDate: (v: string) => void;
+}
+
 function ReadOnly({ value }: { value: string }) {
   return <input className="field calc" readOnly value={value} tabIndex={-1} />;
 }
@@ -16,22 +29,62 @@ function numOrNa(value: number | 'N/A'): string {
   return value === 'N/A' ? 'N/A' : fmt2(value);
 }
 
-export default function Section1() {
-  const [annualPremiumText, setAnnualPremiumText] = useState('');
-  const [book, setBook] = useState<CalculationBook | ''>('By Day');
-  const [yearType, setYearType] = useState<YearType | ''>('Leap Year');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+/** Strip commas; keep digits and a single dot; trim to at most 2 decimals. */
+export function sanitizeMoney(raw: string): string {
+  let s = raw.replace(/,/g, '').replace(/[^0-9.]/g, '');
+  const firstDot = s.indexOf('.');
+  if (firstDot !== -1) {
+    const intPart = s.slice(0, firstDot);
+    const decPart = s.slice(firstDot + 1).replace(/\./g, '').slice(0, 2);
+    s = `${intPart}.${decPart}`;
+  }
+  return s;
+}
 
-  const inputs: PremiumInputs = useMemo(() => {
-    const trimmed = annualPremiumText.trim();
-    const parsed = trimmed === '' ? null : Number(trimmed);
-    const annualPremium =
-      parsed != null && Number.isFinite(parsed) ? parsed : null;
-    return { annualPremium, book, yearType, startDate, endDate };
-  }, [annualPremiumText, book, yearType, startDate, endDate]);
+/** Parse a (possibly comma-formatted) money string to a number or null. */
+export function parseMoney(text: string): number | null {
+  const s = text.replace(/,/g, '').trim();
+  if (s === '') return null;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : null;
+}
+
+export default function Section1(props: Section1Props) {
+  const {
+    sumInsuredText,
+    setSumInsuredText,
+    book,
+    setBook,
+    yearType,
+    setYearType,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
+  } = props;
+
+  const [sumFocused, setSumFocused] = useState(false);
+
+  const inputs: PremiumInputs = useMemo(
+    () => ({
+      sumInsured: parseMoney(sumInsuredText),
+      book,
+      yearType,
+      startDate,
+      endDate,
+    }),
+    [sumInsuredText, book, yearType, startDate, endDate],
+  );
 
   const r = useMemo(() => calculatePremium(inputs), [inputs]);
+
+  // While editing show the raw sanitized value; when blurred show currency format.
+  const sumParsed = parseMoney(sumInsuredText);
+  const sumDisplay = sumFocused
+    ? sumInsuredText.replace(/,/g, '')
+    : sumParsed != null
+      ? fmt2(sumParsed)
+      : '';
 
   const calcPremiumDisplay =
     typeof r.calculatedPremium === 'number'
@@ -43,17 +96,21 @@ export default function Section1() {
       <div className="banner">Section 1 — Insurance Premium Calculation</div>
       <div className="panel">
         <div className="field-grid">
-          <label htmlFor="annual">Annual Premium</label>
+          <label htmlFor="sumInsured">Sum Insured</label>
           <input
-            id="annual"
+            id="sumInsured"
             className="field input"
-            type="number"
-            min={0}
-            step="any"
-            placeholder="e.g. 7000"
-            value={annualPremiumText}
-            onChange={(e) => setAnnualPremiumText(e.target.value)}
+            type="text"
+            inputMode="decimal"
+            placeholder="e.g. 84,000.00"
+            value={sumDisplay}
+            onFocus={() => setSumFocused(true)}
+            onBlur={() => setSumFocused(false)}
+            onChange={(e) => setSumInsuredText(sanitizeMoney(e.target.value))}
           />
+
+          <label>Annual Premium</label>
+          <ReadOnly value={r.annualPremium == null ? '' : fmt2(r.annualPremium)} />
 
           <label htmlFor="book">Calculation Book</label>
           <select

@@ -8,7 +8,9 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "selfcheck": "tsx src/engine/selfCheck.ts",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "react": "^19.2.8",
@@ -19,6 +21,7 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
+    "gh-pages": "^6.3.0",
     "oxlint": "^1.75.0",
     "tsx": "^4.23.12",
     "typescript": "~6.0.2",

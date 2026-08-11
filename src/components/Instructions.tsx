@@ -5,8 +5,10 @@ export default function Instructions() {
       <div className="panel instructions">
         <h3>Section 1 — Insurance Premium Calculation</h3>
         <p>
-          Enter a positive <strong>Annual Premium</strong>. The calculation method
-          depends on the <strong>Calculation Book</strong>:
+          Enter a positive <strong>Sum Insured</strong>. The{' '}
+          <strong>Annual Premium</strong> is calculated automatically as Sum
+          Insured ÷ 12. The calculation method depends on the{' '}
+          <strong>Calculation Book</strong>:
         </p>
         <ul>
           <li>

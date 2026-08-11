@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { makeRow } from '../App';
 import {
   expenseCalculated,
   expenseTotals,
@@ -7,11 +8,9 @@ import {
   type ExpenseType,
 } from '../engine/premiumEngine';
 
-let idCounter = 0;
-function newRow(): ExpenseRow {
-  idCounter += 1;
-  // Opens blank: Dependent so both Amount and %age start empty (Main would force 100).
-  return { id: `row-${idCounter}`, name: '', type: 'Dependent', amount: null, pct: null };
+interface Section2Props {
+  rows: ExpenseRow[];
+  setRows: React.Dispatch<React.SetStateAction<ExpenseRow[]>>;
 }
 
 function parseNum(text: string): number | null {
@@ -21,9 +20,7 @@ function parseNum(text: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-export default function Section2() {
-  const [rows, setRows] = useState<ExpenseRow[]>(() => [newRow()]);
-
+export default function Section2({ rows, setRows }: Section2Props) {
   const totals = useMemo(() => expenseTotals(rows), [rows]);
 
   const update = (id: string, patch: Partial<ExpenseRow>) => {
@@ -47,7 +44,7 @@ export default function Section2() {
     }
   };
 
-  const addRow = () => setRows((prev) => [...prev, newRow()]);
+  const addRow = () => setRows((prev) => [...prev, makeRow()]);
   const removeRow = (id: string) =>
     setRows((prev) => prev.filter((r) => r.id !== id));
 

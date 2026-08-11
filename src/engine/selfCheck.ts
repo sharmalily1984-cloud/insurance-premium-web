@@ -29,8 +29,9 @@ export function runSelfCheck(): CheckResult {
   };
 
   // --- Section 1 acceptance ---
+  // Sum Insured is now the input; Annual Premium = 84000 / 12 = 7000.
   const inputs: PremiumInputs = {
-    annualPremium: 7000,
+    sumInsured: 84000,
     book: 'By Day',
     yearType: 'Leap Year',
     startDate: '2025-03-13',
@@ -38,6 +39,11 @@ export function runSelfCheck(): CheckResult {
   };
   const r = calculatePremium(inputs);
 
+  assert(
+    'Annual Premium',
+    r.annualPremium != null && approx(r.annualPremium, 7000, 1e-6),
+    `got ${r.annualPremium}`,
+  );
   assert('Days in Year', r.daysInYear === 366, `got ${r.daysInYear}`);
   assert('Days Selected', r.daysSelected === 80, `got ${r.daysSelected}`);
   assert(

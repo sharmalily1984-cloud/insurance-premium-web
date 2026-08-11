@@ -34,10 +34,24 @@ body {
   padding: 20px 20px 60px;
 }
 
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
 .app-title {
   font-size: 22px;
   font-weight: 700;
-  margin: 0 0 14px;
+  margin: 0;
+}
+
+.reset-btn {
+  flex: none;
+  background: var(--danger);
+  border-color: var(--danger);
 }
 
 /* Tabs */

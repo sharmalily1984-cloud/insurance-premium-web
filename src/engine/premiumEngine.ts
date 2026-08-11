@@ -6,11 +6,16 @@ export type YearType = 'Leap Year' | 'Non-Leap Year';
 export type ExpenseType = 'Main' | 'Dependent';
 
 export interface PremiumInputs {
-  annualPremium: number | null;
+  sumInsured: number | null;
   book: CalculationBook | '';
   yearType: YearType | '';
   startDate: string; // "YYYY-MM-DD" or ""
   endDate: string; // "YYYY-MM-DD" or ""
+}
+
+/** Annual Premium is derived: Sum Insured ÷ 12. Null when Sum Insured is missing. */
+export function annualPremiumFrom(sumInsured: number | null): number | null {
+  return sumInsured == null ? null : sumInsured / 12;
 }
 
 export interface MonthRow {
@@ -23,6 +28,7 @@ export interface MonthRow {
 }
 
 export interface PremiumResult {
+  annualPremium: number | null;
   daysInYear: number | null;
   daysSelected: number | null;
   annualDailyPremium: number | null;
@@ -77,12 +83,12 @@ export function daysInYearFor(yearType: YearType | ''): number | null {
 export function buildMonths(
   inputs: PremiumInputs,
   daysInYear: number | null,
+  annual: number | null,
 ): MonthRow[] {
   const rows: MonthRow[] = [];
   const start = parseYmd(inputs.startDate);
   const startMs = utcMsFromYmd(inputs.startDate);
   const endMs = utcMsFromYmd(inputs.endDate);
-  const annual = inputs.annualPremium;
 
   for (let i = 0; i < 12; i++) {
     let monthStartMs = 0;
@@ -132,7 +138,7 @@ export function buildMonths(
 
 export function calculatePremium(inputs: PremiumInputs): PremiumResult {
   const daysInYear = daysInYearFor(inputs.yearType);
-  const annual = inputs.annualPremium;
+  const annual = annualPremiumFrom(inputs.sumInsured); // Annual Premium = Sum Insured / 12
   const startMs = utcMsFromYmd(inputs.startDate);
   const endMs = utcMsFromYmd(inputs.endDate);
 
@@ -146,12 +152,12 @@ export function calculatePremium(inputs: PremiumInputs): PremiumResult {
     annual != null && annual > 0 && daysInYear ? annual / daysInYear : null;
   const monthlyPremium = annual != null && annual > 0 ? annual / 12 : null;
 
-  const months = buildMonths(inputs, daysInYear);
+  const months = buildMonths(inputs, daysInYear, annual);
 
-  // Status (priority order).
+  // Status (priority order). Sum Insured is now the actual input.
   let status: PremiumResult['status'];
-  if (annual == null || annual <= 0) {
-    status = { text: '⚠ Enter valid Premium', kind: 'warn' };
+  if (inputs.sumInsured == null || inputs.sumInsured <= 0) {
+    status = { text: '⚠ Enter valid Sum Insured', kind: 'warn' };
   } else if (inputs.book === '') {
     status = { text: '⚠ Select Calculation Book', kind: 'warn' };
   } else if (inputs.yearType === '') {
@@ -169,8 +175,8 @@ export function calculatePremium(inputs: PremiumInputs): PremiumResult {
   // Calculated Premium = sum of the 12 month premiums, with error messages.
   let calculatedPremium: number | string;
   const missingCore =
-    annual == null ||
-    annual <= 0 ||
+    inputs.sumInsured == null ||
+    inputs.sumInsured <= 0 ||
     inputs.book === '' ||
     inputs.yearType === '' ||
     !inputs.startDate ||
@@ -205,6 +211,7 @@ export function calculatePremium(inputs: PremiumInputs): PremiumResult {
       : 'N/A';
 
   return {
+    annualPremium: annual,
     daysInYear,
     daysSelected,
     annualDailyPremium,
