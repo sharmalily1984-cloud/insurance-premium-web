@@ -1,0 +1,266 @@
+/* Insurance Premium Calculator — single theming stylesheet.
+   Colors chosen to match the source spreadsheet. */
+
+:root {
+  --banner-bg: #4472c4;
+  --banner-fg: #ffffff;
+  --input-bg: #ffffc0; /* pale yellow — editable */
+  --calc-bg: #e8e8e8; /* light grey — read-only */
+  --table-head-bg: #d6dce5;
+  --table-head-fg: #666666;
+  --border: #c9c9c9;
+  --page-bg: #f4f5f7;
+  --text: #1f2430;
+  --ok: #157f3b;
+  --warn: #b45309;
+  --danger: #b91c1c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--page-bg);
+  color: var(--text);
+  font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+  font-size: 14px;
+}
+
+.app {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 20px 20px 60px;
+}
+
+.app-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 14px;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid var(--banner-bg);
+  margin-bottom: 18px;
+}
+
+.tab {
+  appearance: none;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  background: #e2e6ee;
+  color: var(--text);
+  padding: 9px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 6px 6px 0 0;
+}
+
+.tab.active {
+  background: var(--banner-bg);
+  color: var(--banner-fg);
+}
+
+/* Section banner */
+.banner {
+  background: var(--banner-bg);
+  color: var(--banner-fg);
+  font-weight: 700;
+  padding: 8px 12px;
+  border-radius: 4px 4px 0 0;
+  margin-top: 22px;
+  font-size: 15px;
+}
+
+.panel {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-top: none;
+  padding: 16px;
+  border-radius: 0 0 4px 4px;
+}
+
+/* Field grid */
+.field-grid {
+  display: grid;
+  grid-template-columns: 230px 1fr;
+  gap: 8px 14px;
+  align-items: center;
+  max-width: 620px;
+}
+
+.field-grid label {
+  font-weight: 600;
+}
+
+.field {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.field.input {
+  background: var(--input-bg);
+}
+
+.field.calc {
+  background: var(--calc-bg);
+  color: #333;
+}
+
+input.field:read-only {
+  cursor: default;
+}
+
+.status {
+  font-weight: 700;
+}
+.status.ok {
+  color: var(--ok);
+}
+.status.warn {
+  color: var(--warn);
+}
+
+.subhead {
+  font-weight: 700;
+  margin: 22px 0 8px;
+  font-size: 15px;
+}
+
+/* Tables */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13.5px;
+}
+
+th,
+td {
+  border: 1px solid var(--border);
+  padding: 6px 8px;
+  text-align: right;
+}
+
+th {
+  background: var(--table-head-bg);
+  color: var(--table-head-fg);
+  font-weight: 700;
+  text-align: center;
+}
+
+td.text,
+th.text {
+  text-align: left;
+}
+
+tr.total-row td {
+  background: var(--table-head-bg);
+  color: var(--table-head-fg);
+  font-weight: 700;
+}
+
+.cell-input {
+  width: 100%;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--input-bg);
+  font-size: 13.5px;
+  font-family: inherit;
+  text-align: right;
+}
+.cell-input.text {
+  text-align: left;
+}
+.cell-input.locked {
+  background: var(--calc-bg);
+  color: #555;
+}
+.cell-calc {
+  background: var(--calc-bg);
+}
+
+select.cell-input {
+  text-align: left;
+}
+
+.btn-row {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.btn {
+  appearance: none;
+  border: 1px solid var(--banner-bg);
+  background: var(--banner-bg);
+  color: #fff;
+  padding: 7px 14px;
+  font-size: 13.5px;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.btn.secondary {
+  background: #fff;
+  color: var(--banner-bg);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.note {
+  margin-top: 10px;
+  font-size: 12.5px;
+  color: #555;
+  font-style: italic;
+}
+
+.legend {
+  display: flex;
+  gap: 18px;
+  margin-top: 14px;
+  font-size: 13px;
+}
+.swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--border);
+  vertical-align: middle;
+  margin-right: 6px;
+}
+.swatch.input {
+  background: var(--input-bg);
+}
+.swatch.calc {
+  background: var(--calc-bg);
+}
+
+/* Instructions */
+.instructions h3 {
+  margin: 18px 0 6px;
+}
+.instructions p,
+.instructions li {
+  line-height: 1.55;
+}
+
+.error-text {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
