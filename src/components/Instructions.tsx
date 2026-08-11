@@ -1,7 +1,7 @@
 export default function Instructions() {
   return (
     <div>
-      <div className="banner">Instruction Guide</div>
+      <div className="banner">Instructions...!</div>
       <div className="panel instructions">
         <h3>Section 1 — Insurance Premium Calculation</h3>
         <p>
