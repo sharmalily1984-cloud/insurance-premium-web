@@ -96,7 +96,7 @@ export default function Section1(props: Section1Props) {
       <div className="banner">Section 1 — Insurance Premium Calculation</div>
       <div className="panel">
         <div className="field-grid">
-          <label htmlFor="sumInsured">Sum Insured</label>
+          <label htmlFor="sumInsured">Sum Insured Amount</label>
           <input
             id="sumInsured"
             className="field input"

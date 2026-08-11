@@ -157,7 +157,7 @@ export function calculatePremium(inputs: PremiumInputs): PremiumResult {
   // Status (priority order). Sum Insured is now the actual input.
   let status: PremiumResult['status'];
   if (inputs.sumInsured == null || inputs.sumInsured <= 0) {
-    status = { text: '⚠ Enter valid Sum Insured', kind: 'warn' };
+    status = { text: '⚠ Enter valid Sum Insured Amount', kind: 'warn' };
   } else if (inputs.book === '') {
     status = { text: '⚠ Select Calculation Book', kind: 'warn' };
   } else if (inputs.yearType === '') {
