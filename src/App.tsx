@@ -72,7 +72,7 @@ export default function App() {
           type="button"
           onClick={() => setTab('calculator')}
         >
-          Calculator
+          Premium Calculator
         </button>
         <button
           className={`tab ${tab === 'instructions' ? 'active' : ''}`}
