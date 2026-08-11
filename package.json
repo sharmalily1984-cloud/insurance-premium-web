@@ -9,6 +9,8 @@
     "lint": "oxlint",
     "selfcheck": "tsx src/engine/selfCheck.ts",
     "preview": "vite preview"
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "react": "^19.2.8",
