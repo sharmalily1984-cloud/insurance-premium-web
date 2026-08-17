@@ -6,12 +6,11 @@ import {
   fmtDate,
   type CalculationBook,
   type PremiumInputs,
+  type PremiumResult,
   type YearType,
 } from '../engine/premiumEngine';
 
 interface Section1Props {
-  sumInsuredText: string;
-  setSumInsuredText: (v: string) => void;
   book: CalculationBook | '';
   setBook: (v: CalculationBook | '') => void;
   yearType: YearType | '';
@@ -111,10 +110,15 @@ function MoneyInput({
   );
 }
 
+/** Helper to display a calculated premium value. */
+function calcDisplay(r: PremiumResult): string {
+  return typeof r.calculatedPremium === 'number'
+    ? fmt2(r.calculatedPremium)
+    : r.calculatedPremium;
+}
+
 export default function Section1(props: Section1Props) {
   const {
-    sumInsuredText,
-    setSumInsuredText,
     book,
     setBook,
     yearType,
@@ -135,8 +139,6 @@ export default function Section1(props: Section1Props) {
     setSiIpText,
   } = props;
 
-  const [sumFocused, setSumFocused] = useState(false);
-
   // Parse limits
   const aalLimit = parseMoney(aalLimitText);
   const fulLimit = parseMoney(fulLimitText);
@@ -156,32 +158,29 @@ export default function Section1(props: Section1Props) {
   const tpdMsg = siValidationMsg(siTpd, aalLimit, fulLimit);
   const ipMsg = siValidationMsg(siIp, aalLimit, fulLimit);
 
-  // --- Existing Sum Insured / engine logic (unchanged) ---
-  const inputs: PremiumInputs = useMemo(
-    () => ({
-      sumInsured: parseMoney(sumInsuredText),
-      book,
-      yearType,
-      startDate,
-      endDate,
-    }),
-    [sumInsuredText, book, yearType, startDate, endDate],
+  // --- Run engine for each SI field (DTH/TPD/IP) ---
+  // The engine uses sumInsured to derive everything. We pass each SI independently.
+  const inputsDth: PremiumInputs = useMemo(
+    () => ({ sumInsured: siDth, book, yearType, startDate, endDate }),
+    [siDth, book, yearType, startDate, endDate],
+  );
+  const inputsTpd: PremiumInputs = useMemo(
+    () => ({ sumInsured: siTpd, book, yearType, startDate, endDate }),
+    [siTpd, book, yearType, startDate, endDate],
+  );
+  const inputsIp: PremiumInputs = useMemo(
+    () => ({ sumInsured: siIp, book, yearType, startDate, endDate }),
+    [siIp, book, yearType, startDate, endDate],
   );
 
-  const r = useMemo(() => calculatePremium(inputs), [inputs]);
+  const rDth = useMemo(() => calculatePremium(inputsDth), [inputsDth]);
+  const rTpd = useMemo(() => calculatePremium(inputsTpd), [inputsTpd]);
+  const rIp = useMemo(() => calculatePremium(inputsIp), [inputsIp]);
 
-  // While editing show the raw sanitized value; when blurred show currency format.
-  const sumParsed = parseMoney(sumInsuredText);
-  const sumDisplay = sumFocused
-    ? sumInsuredText.replace(/,/g, '')
-    : sumParsed != null
-      ? fmt2(sumParsed)
-      : '';
-
-  const calcPremiumDisplay =
-    typeof r.calculatedPremium === 'number'
-      ? fmt2(r.calculatedPremium)
-      : r.calculatedPremium;
+  // Status: use DTH result for overall status display (they share the same
+  // non-SI fields so status will be the same once SI is filled in any).
+  // We pick the first one that has a real SI, or DTH as fallback.
+  const statusResult = siDth != null ? rDth : siTpd != null ? rTpd : rDth;
 
   return (
     <div>
@@ -267,25 +266,9 @@ export default function Section1(props: Section1Props) {
           <ReadOnly value={apIp != null ? fmt2(apIp) : ''} />
         </div>
 
-        {/* --- Existing Sum Insured + Premium Calculation fields --- */}
+        {/* --- Premium Calculation --- */}
         <div className="subhead">Premium Calculation</div>
         <div className="field-grid">
-          <label htmlFor="sumInsured">Sum Insured</label>
-          <input
-            id="sumInsured"
-            className="field input"
-            type="text"
-            inputMode="decimal"
-            placeholder="e.g. 84,000.00"
-            value={sumDisplay}
-            onFocus={() => setSumFocused(true)}
-            onBlur={() => setSumFocused(false)}
-            onChange={(e) => setSumInsuredText(sanitizeMoney(e.target.value))}
-          />
-
-          <label>Annual Premium</label>
-          <ReadOnly value={r.annualPremium == null ? '' : fmt2(r.annualPremium)} />
-
           <label htmlFor="book">Calculation Book</label>
           <select
             id="book"
@@ -327,50 +310,77 @@ export default function Section1(props: Section1Props) {
           />
 
           <label>Days in Year</label>
-          <ReadOnly value={r.daysInYear == null ? '' : String(r.daysInYear)} />
+          <ReadOnly value={rDth.daysInYear == null ? '' : String(rDth.daysInYear)} />
 
           <label>Number of Days Selected</label>
-          <ReadOnly value={r.daysSelected == null ? '' : String(r.daysSelected)} />
-
-          <label>Annual Daily Premium</label>
-          <ReadOnly
-            value={r.annualDailyPremium == null ? '' : fmt2(r.annualDailyPremium)}
-          />
-
-          <label>Monthly Premium</label>
-          <ReadOnly value={r.monthlyPremium == null ? '' : fmt2(r.monthlyPremium)} />
-
-          <label>Calculated Premium</label>
-          <ReadOnly value={calcPremiumDisplay} />
-
-          <label>Status</label>
-          <div className={`status ${r.status.kind}`}>{r.status.text}</div>
-
-          <label>Smooth Method</label>
-          <ReadOnly value={numOrNa(r.smoothMethod)} />
-
-          <label>By Day Method</label>
-          <ReadOnly value={numOrNa(r.byDayMethod)} />
-
-          <label>Difference</label>
-          <ReadOnly value={numOrNa(r.difference)} />
+          <ReadOnly value={rDth.daysSelected == null ? '' : String(rDth.daysSelected)} />
         </div>
 
+        {/* --- DTH / TPD / IP computed fields in a 4-column grid --- */}
+        <div className="subhead">Calculated Values (DTH / TPD / IP)</div>
+        <div className="triple-grid">
+          <div className="triple-header" />
+          <div className="triple-header">DTH</div>
+          <div className="triple-header">TPD</div>
+          <div className="triple-header">IP</div>
+
+          <label>Annual Daily Premium</label>
+          <ReadOnly value={rDth.annualDailyPremium == null ? '' : fmt2(rDth.annualDailyPremium)} />
+          <ReadOnly value={rTpd.annualDailyPremium == null ? '' : fmt2(rTpd.annualDailyPremium)} />
+          <ReadOnly value={rIp.annualDailyPremium == null ? '' : fmt2(rIp.annualDailyPremium)} />
+
+          <label>Monthly Premium</label>
+          <ReadOnly value={rDth.monthlyPremium == null ? '' : fmt2(rDth.monthlyPremium)} />
+          <ReadOnly value={rTpd.monthlyPremium == null ? '' : fmt2(rTpd.monthlyPremium)} />
+          <ReadOnly value={rIp.monthlyPremium == null ? '' : fmt2(rIp.monthlyPremium)} />
+
+          <label>Calculated Premium</label>
+          <ReadOnly value={calcDisplay(rDth)} />
+          <ReadOnly value={calcDisplay(rTpd)} />
+          <ReadOnly value={calcDisplay(rIp)} />
+
+          <label>Smooth Method</label>
+          <ReadOnly value={numOrNa(rDth.smoothMethod)} />
+          <ReadOnly value={numOrNa(rTpd.smoothMethod)} />
+          <ReadOnly value={numOrNa(rIp.smoothMethod)} />
+
+          <label>By Day Method</label>
+          <ReadOnly value={numOrNa(rDth.byDayMethod)} />
+          <ReadOnly value={numOrNa(rTpd.byDayMethod)} />
+          <ReadOnly value={numOrNa(rIp.byDayMethod)} />
+
+          <label>Difference</label>
+          <ReadOnly value={numOrNa(rDth.difference)} />
+          <ReadOnly value={numOrNa(rTpd.difference)} />
+          <ReadOnly value={numOrNa(rIp.difference)} />
+        </div>
+
+        <div className="field-grid" style={{ marginTop: 12 }}>
+          <label>Status</label>
+          <div className={`status ${statusResult.status.kind}`}>{statusResult.status.text}</div>
+        </div>
+
+        {/* --- Month Calculation Helper with 3 sub-columns for Month Premium --- */}
         <div className="subhead">Month Calculation Helper</div>
         <div className="table-scroll">
           <table>
             <thead>
               <tr>
-                <th>Month #</th>
-                <th>Month Start</th>
-                <th>Month End</th>
-                <th>Days in Month</th>
-                <th>Covered Days</th>
-                <th>Month Premium</th>
+                <th rowSpan={2}>Month #</th>
+                <th rowSpan={2}>Month Start</th>
+                <th rowSpan={2}>Month End</th>
+                <th rowSpan={2}>Days in Month</th>
+                <th rowSpan={2}>Covered Days</th>
+                <th colSpan={3}>Month Premium</th>
+              </tr>
+              <tr>
+                <th>DTH</th>
+                <th>TPD</th>
+                <th>IP</th>
               </tr>
             </thead>
             <tbody>
-              {r.months.map((m) => {
+              {rDth.months.map((m, idx) => {
                 const hasDates = m.monthStartMs !== 0 || m.monthEndMs !== 0;
                 return (
                   <tr key={m.monthNumber}>
@@ -379,7 +389,9 @@ export default function Section1(props: Section1Props) {
                     <td>{hasDates ? fmtDate(m.monthEndMs) : ''}</td>
                     <td>{hasDates ? m.daysInMonth : ''}</td>
                     <td>{hasDates ? m.coveredDays : ''}</td>
-                    <td>{fmt2(m.monthPremium)}</td>
+                    <td>{fmt2(rDth.months[idx].monthPremium)}</td>
+                    <td>{fmt2(rTpd.months[idx].monthPremium)}</td>
+                    <td>{fmt2(rIp.months[idx].monthPremium)}</td>
                   </tr>
                 );
               })}

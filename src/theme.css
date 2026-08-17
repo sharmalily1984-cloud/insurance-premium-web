@@ -108,6 +108,22 @@ body {
   max-width: 620px;
 }
 
+/* Triple-value grid (label + 3 boxes for DTH/TPD/IP) */
+.triple-grid {
+  display: grid;
+  grid-template-columns: 230px 1fr 1fr 1fr;
+  gap: 8px 10px;
+  align-items: center;
+  max-width: 820px;
+}
+
+.triple-header {
+  font-weight: 700;
+  text-align: center;
+  font-size: 13px;
+  color: var(--table-head-fg);
+}
+
 .field-grid label {
   font-weight: 600;
 }

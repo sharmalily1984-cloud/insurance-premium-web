@@ -29,7 +29,6 @@ export default function App() {
   // --- All calculator + expense state lifted here so it persists across tab
   //     switches (both tabs share this parent). A full page refresh remounts
   //     App and starts blank — no localStorage/sessionStorage involved. ---
-  const [sumInsuredText, setSumInsuredText] = useState('');
   const [book, setBook] = useState<CalculationBook | ''>(initialBook);
   const [yearType, setYearType] = useState<YearType | ''>(initialYearType);
   const [startDate, setStartDate] = useState('');
@@ -58,7 +57,6 @@ export default function App() {
 
   const handleReset = () => {
     if (!window.confirm('Reset all data?')) return;
-    setSumInsuredText('');
     setBook(initialBook);
     setYearType(initialYearType);
     setStartDate('');
@@ -100,8 +98,6 @@ export default function App() {
       {tab === 'calculator' ? (
         <>
           <Section1
-            sumInsuredText={sumInsuredText}
-            setSumInsuredText={setSumInsuredText}
             book={book}
             setBook={setBook}
             yearType={yearType}
