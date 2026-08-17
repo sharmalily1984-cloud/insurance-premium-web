@@ -275,6 +275,14 @@ select.cell-input {
   font-weight: 600;
 }
 
+.validation-msg {
+  color: var(--warn);
+  font-size: 12.5px;
+  font-weight: 600;
+  margin-top: -4px;
+  margin-bottom: 2px;
+}
+
 .table-scroll {
   overflow-x: auto;
 }

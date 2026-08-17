@@ -36,6 +36,15 @@ export default function App() {
   const [endDate, setEndDate] = useState('');
   const [rows, setRows] = useState<ExpenseRow[]>(() => [makeRow()]);
 
+  // --- AAL/FUL Limit state ---
+  const [aalLimitText, setAalLimitText] = useState('');
+  const [fulLimitText, setFulLimitText] = useState('');
+
+  // --- Separate Sum Insured fields (DTH/TPD/IP) ---
+  const [siDthText, setSiDthText] = useState('');
+  const [siTpdText, setSiTpdText] = useState('');
+  const [siIpText, setSiIpText] = useState('');
+
   // Log the engine self-check to the browser console in dev.
   useEffect(() => {
     const result = runSelfCheck();
@@ -55,6 +64,11 @@ export default function App() {
     setStartDate('');
     setEndDate('');
     setRows([makeRow()]);
+    setAalLimitText('');
+    setFulLimitText('');
+    setSiDthText('');
+    setSiTpdText('');
+    setSiIpText('');
   };
 
   return (
@@ -96,6 +110,16 @@ export default function App() {
             setStartDate={setStartDate}
             endDate={endDate}
             setEndDate={setEndDate}
+            aalLimitText={aalLimitText}
+            setAalLimitText={setAalLimitText}
+            fulLimitText={fulLimitText}
+            setFulLimitText={setFulLimitText}
+            siDthText={siDthText}
+            setSiDthText={setSiDthText}
+            siTpdText={siTpdText}
+            setSiTpdText={setSiTpdText}
+            siIpText={siIpText}
+            setSiIpText={setSiIpText}
           />
           <Section2 rows={rows} setRows={setRows} />
         </>

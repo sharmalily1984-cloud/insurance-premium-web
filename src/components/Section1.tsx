@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
+  annualPremiumFrom,
   calculatePremium,
   fmt2,
   fmtDate,
@@ -19,6 +20,16 @@ interface Section1Props {
   setStartDate: (v: string) => void;
   endDate: string;
   setEndDate: (v: string) => void;
+  aalLimitText: string;
+  setAalLimitText: (v: string) => void;
+  fulLimitText: string;
+  setFulLimitText: (v: string) => void;
+  siDthText: string;
+  setSiDthText: (v: string) => void;
+  siTpdText: string;
+  setSiTpdText: (v: string) => void;
+  siIpText: string;
+  setSiIpText: (v: string) => void;
 }
 
 function ReadOnly({ value }: { value: string }) {
@@ -49,6 +60,57 @@ export function parseMoney(text: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+/** Validation message for a SI field against AAL/FUL limits. */
+function siValidationMsg(
+  siValue: number | null,
+  aalLimit: number | null,
+  fulLimit: number | null,
+): string | null {
+  if (siValue == null || siValue <= 0) return null;
+  if (aalLimit != null && siValue > aalLimit) {
+    return 'Sum Insured cannot exceed the AAL Limit. The remaining amount should go in an additional rider.';
+  }
+  if (fulLimit != null && siValue > fulLimit) {
+    return 'Sum Insured exceeds the FUL Limit. The remaining amount must be provided through a new rider.';
+  }
+  return null;
+}
+
+/** Money input with focus/blur formatting. */
+function MoneyInput({
+  id,
+  value,
+  onChange,
+  placeholder,
+}: {
+  id: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
+  const [focused, setFocused] = useState(false);
+  const parsed = parseMoney(value);
+  const display = focused
+    ? value.replace(/,/g, '')
+    : parsed != null
+      ? fmt2(parsed)
+      : '';
+
+  return (
+    <input
+      id={id}
+      className="field input"
+      type="text"
+      inputMode="decimal"
+      placeholder={placeholder ?? ''}
+      value={display}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      onChange={(e) => onChange(sanitizeMoney(e.target.value))}
+    />
+  );
+}
+
 export default function Section1(props: Section1Props) {
   const {
     sumInsuredText,
@@ -61,10 +123,40 @@ export default function Section1(props: Section1Props) {
     setStartDate,
     endDate,
     setEndDate,
+    aalLimitText,
+    setAalLimitText,
+    fulLimitText,
+    setFulLimitText,
+    siDthText,
+    setSiDthText,
+    siTpdText,
+    setSiTpdText,
+    siIpText,
+    setSiIpText,
   } = props;
 
   const [sumFocused, setSumFocused] = useState(false);
 
+  // Parse limits
+  const aalLimit = parseMoney(aalLimitText);
+  const fulLimit = parseMoney(fulLimitText);
+
+  // Parse individual SI values
+  const siDth = parseMoney(siDthText);
+  const siTpd = parseMoney(siTpdText);
+  const siIp = parseMoney(siIpText);
+
+  // Calculate Annual Premium for each SI field
+  const apDth = annualPremiumFrom(siDth);
+  const apTpd = annualPremiumFrom(siTpd);
+  const apIp = annualPremiumFrom(siIp);
+
+  // Validation messages for each SI field
+  const dthMsg = siValidationMsg(siDth, aalLimit, fulLimit);
+  const tpdMsg = siValidationMsg(siTpd, aalLimit, fulLimit);
+  const ipMsg = siValidationMsg(siIp, aalLimit, fulLimit);
+
+  // --- Existing Sum Insured / engine logic (unchanged) ---
   const inputs: PremiumInputs = useMemo(
     () => ({
       sumInsured: parseMoney(sumInsuredText),
@@ -95,6 +187,88 @@ export default function Section1(props: Section1Props) {
     <div>
       <div className="banner">Section 1 — Insurance Premium Calculation</div>
       <div className="panel">
+
+        {/* --- AAL / FUL Limits --- */}
+        <div className="subhead">Limits</div>
+        <div className="field-grid">
+          <label htmlFor="aalLimit">AAL Limit</label>
+          <MoneyInput
+            id="aalLimit"
+            value={aalLimitText}
+            onChange={setAalLimitText}
+            placeholder="Optional"
+          />
+
+          <label htmlFor="fulLimit">FUL Limit</label>
+          <MoneyInput
+            id="fulLimit"
+            value={fulLimitText}
+            onChange={setFulLimitText}
+            placeholder="Optional"
+          />
+        </div>
+
+        {/* --- Sum Insured (DTH / TPD / IP) --- */}
+        <div className="subhead">Sum Insured</div>
+        <div className="field-grid">
+          <label htmlFor="siDth">SI_DTH</label>
+          <MoneyInput
+            id="siDth"
+            value={siDthText}
+            onChange={setSiDthText}
+            placeholder="e.g. 120,000.00"
+          />
+          {dthMsg && (
+            <>
+              <span />
+              <div className="validation-msg">{dthMsg}</div>
+            </>
+          )}
+
+          <label htmlFor="siTpd">SI_TPD</label>
+          <MoneyInput
+            id="siTpd"
+            value={siTpdText}
+            onChange={setSiTpdText}
+            placeholder="e.g. 60,000.00"
+          />
+          {tpdMsg && (
+            <>
+              <span />
+              <div className="validation-msg">{tpdMsg}</div>
+            </>
+          )}
+
+          <label htmlFor="siIp">SI_IP</label>
+          <MoneyInput
+            id="siIp"
+            value={siIpText}
+            onChange={setSiIpText}
+            placeholder="e.g. 36,000.00"
+          />
+          {ipMsg && (
+            <>
+              <span />
+              <div className="validation-msg">{ipMsg}</div>
+            </>
+          )}
+        </div>
+
+        {/* --- Annual Premium (DTH / TPD / IP) — read-only --- */}
+        <div className="subhead">Annual Premium</div>
+        <div className="field-grid">
+          <label>AP_DTH</label>
+          <ReadOnly value={apDth != null ? fmt2(apDth) : ''} />
+
+          <label>AP_TPD</label>
+          <ReadOnly value={apTpd != null ? fmt2(apTpd) : ''} />
+
+          <label>AP_IP</label>
+          <ReadOnly value={apIp != null ? fmt2(apIp) : ''} />
+        </div>
+
+        {/* --- Existing Sum Insured + Premium Calculation fields --- */}
+        <div className="subhead">Premium Calculation</div>
         <div className="field-grid">
           <label htmlFor="sumInsured">Sum Insured</label>
           <input
