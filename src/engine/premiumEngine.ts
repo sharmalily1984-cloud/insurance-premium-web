@@ -84,13 +84,14 @@ export function buildMonths(
   inputs: PremiumInputs,
   daysInYear: number | null,
   annual: number | null,
+  monthCount = 12,
 ): MonthRow[] {
   const rows: MonthRow[] = [];
   const start = parseYmd(inputs.startDate);
   const startMs = utcMsFromYmd(inputs.startDate);
   const endMs = utcMsFromYmd(inputs.endDate);
 
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < monthCount; i++) {
     let monthStartMs = 0;
     let monthEndMs = 0;
     let daysInMonth = 0;
@@ -136,6 +137,18 @@ export function buildMonths(
   return rows;
 }
 
+/**
+ * Calculate the number of months from start to end (inclusive of both months).
+ * Returns at least 12 for backward compatibility.
+ */
+export function monthSpan(startDate: string, endDate: string): number {
+  const s = parseYmd(startDate);
+  const e = parseYmd(endDate);
+  if (!s || !e) return 12;
+  const months = (e.y - s.y) * 12 + (e.m - s.m) + 1;
+  return Math.max(months, 12);
+}
+
 export function calculatePremium(inputs: PremiumInputs): PremiumResult {
   const daysInYear = daysInYearFor(inputs.yearType);
   const annual = annualPremiumFrom(inputs.sumInsured); // Annual Premium = Sum Insured / 12
@@ -152,7 +165,7 @@ export function calculatePremium(inputs: PremiumInputs): PremiumResult {
     annual != null && annual > 0 && daysInYear ? annual / daysInYear : null;
   const monthlyPremium = annual != null && annual > 0 ? annual / 12 : null;
 
-  const months = buildMonths(inputs, daysInYear, annual);
+  const months = buildMonths(inputs, daysInYear, annual, monthSpan(inputs.startDate, inputs.endDate));
 
   // Status (priority order). Sum Insured is now the actual input.
   let status: PremiumResult['status'];
@@ -199,8 +212,6 @@ export function calculatePremium(inputs: PremiumInputs): PremiumResult {
   let byDayMethod: number | 'N/A';
   if (inputs.book === 'By Day' && calcNumeric != null) {
     byDayMethod = calcNumeric;
-  } else if (annualDailyPremium != null && daysSelected != null && daysSelected > 0) {
-    byDayMethod = annualDailyPremium * daysSelected;
   } else {
     byDayMethod = 'N/A';
   }

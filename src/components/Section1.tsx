@@ -117,6 +117,8 @@ function calcDisplay(r: PremiumResult): string {
     : r.calculatedPremium;
 }
 
+const ROWS_PER_PAGE = 12;
+
 export default function Section1(props: Section1Props) {
   const {
     book,
@@ -138,6 +140,9 @@ export default function Section1(props: Section1Props) {
     siIpText,
     setSiIpText,
   } = props;
+
+  // Pagination for month table
+  const [monthPage, setMonthPage] = useState(0);
 
   // Parse limits
   const aalLimit = parseMoney(aalLimitText);
@@ -179,12 +184,22 @@ export default function Section1(props: Section1Props) {
   // Status: pick first result that has a SI entered
   const statusResult = siDth != null ? rDth : siTpd != null ? rTpd : rDth;
 
+  // Pagination
+  const totalMonths = rDth.months.length;
+  const totalPages = Math.max(1, Math.ceil(totalMonths / ROWS_PER_PAGE));
+  const safePage = Math.min(monthPage, totalPages - 1);
+  const pageStart = safePage * ROWS_PER_PAGE;
+  const pageEnd = Math.min(pageStart + ROWS_PER_PAGE, totalMonths);
+  const visibleMonthsDth = rDth.months.slice(pageStart, pageEnd);
+  const visibleMonthsTpd = rTpd.months.slice(pageStart, pageEnd);
+  const visibleMonthsIp = rIp.months.slice(pageStart, pageEnd);
+
   return (
     <div>
       <div className="banner">Section 1 — Insurance Premium Calculation</div>
       <div className="panel">
 
-        {/* --- Top sections in a 2×2 horizontal grid --- */}
+        {/* --- Top sections in a 2x2 horizontal grid --- */}
         <div className="top-grid">
           {/* Column 1, Row 1: Limits */}
           <div className="top-card">
@@ -224,6 +239,7 @@ export default function Section1(props: Section1Props) {
               <label>AP_IP</label>
               <ReadOnly value={apIp != null ? fmt2(apIp) : ''} />
             </div>
+            <div className="note">Values are automatically calculated as Sum Insured ÷ 12.</div>
           </div>
 
           {/* Column 2, Row 2: Premium Calculation */}
@@ -241,9 +257,9 @@ export default function Section1(props: Section1Props) {
                 <option value="Non-Leap Year">Non-Leap Year</option>
               </select>
               <label htmlFor="start">Start Date</label>
-              <input id="start" className="field input" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              <input id="start" className="field input" type="date" value={startDate} onChange={(e) => { setStartDate(e.target.value); setMonthPage(0); }} />
               <label htmlFor="end">End Date</label>
-              <input id="end" className="field input" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              <input id="end" className="field input" type="date" value={endDate} onChange={(e) => { setEndDate(e.target.value); setMonthPage(0); }} />
               <label>Days in Year</label>
               <ReadOnly value={rDth.daysInYear == null ? '' : String(rDth.daysInYear)} />
               <label>Days Selected</label>
@@ -284,11 +300,6 @@ export default function Section1(props: Section1Props) {
           <ReadOnly value={numOrNa(rDth.byDayMethod)} />
           <ReadOnly value={numOrNa(rTpd.byDayMethod)} />
           <ReadOnly value={numOrNa(rIp.byDayMethod)} />
-
-          <label>Difference</label>
-          <ReadOnly value={numOrNa(rDth.difference)} />
-          <ReadOnly value={numOrNa(rTpd.difference)} />
-          <ReadOnly value={numOrNa(rIp.difference)} />
         </div>
 
         <div className="compact-grid" style={{ marginTop: 10, maxWidth: 400 }}>
@@ -296,8 +307,13 @@ export default function Section1(props: Section1Props) {
           <div className={`status ${statusResult.status.kind}`}>{statusResult.status.text}</div>
         </div>
 
-        {/* --- Month Calculation Helper --- */}
-        <div className="subhead">Month Calculation Helper</div>
+        {/* --- Month Calculation Helper with pagination --- */}
+        <div className="subhead">
+          Month Calculation Helper
+          {totalMonths > ROWS_PER_PAGE && (
+            <span className="page-info"> — Page {safePage + 1} of {totalPages} ({totalMonths} months)</span>
+          )}
+        </div>
         <div className="table-scroll">
           <table>
             <thead>
@@ -316,7 +332,7 @@ export default function Section1(props: Section1Props) {
               </tr>
             </thead>
             <tbody>
-              {rDth.months.map((m, idx) => {
+              {visibleMonthsDth.map((m, i) => {
                 const hasDates = m.monthStartMs !== 0 || m.monthEndMs !== 0;
                 return (
                   <tr key={m.monthNumber}>
@@ -325,15 +341,26 @@ export default function Section1(props: Section1Props) {
                     <td>{hasDates ? fmtDate(m.monthEndMs) : ''}</td>
                     <td>{hasDates ? m.daysInMonth : ''}</td>
                     <td>{hasDates ? m.coveredDays : ''}</td>
-                    <td>{fmt2(rDth.months[idx].monthPremium)}</td>
-                    <td>{fmt2(rTpd.months[idx].monthPremium)}</td>
-                    <td>{fmt2(rIp.months[idx].monthPremium)}</td>
+                    <td>{fmt2(visibleMonthsDth[i].monthPremium)}</td>
+                    <td>{fmt2(visibleMonthsTpd[i].monthPremium)}</td>
+                    <td>{fmt2(visibleMonthsIp[i].monthPremium)}</td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
         </div>
+        {totalPages > 1 && (
+          <div className="pagination">
+            <button className="btn secondary" type="button" disabled={safePage === 0} onClick={() => setMonthPage(safePage - 1)}>
+              Previous
+            </button>
+            <span className="page-label">Page {safePage + 1} / {totalPages}</span>
+            <button className="btn secondary" type="button" disabled={safePage >= totalPages - 1} onClick={() => setMonthPage(safePage + 1)}>
+              Next
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -347,6 +347,26 @@ select.cell-input {
   overflow-x: auto;
 }
 
+/* Pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.page-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--table-head-fg);
+}
+
+.page-info {
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--table-head-fg);
+}
+
 /* Responsive: stack on small screens */
 @media (max-width: 768px) {
   .top-grid {
