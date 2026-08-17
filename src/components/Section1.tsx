@@ -159,7 +159,6 @@ export default function Section1(props: Section1Props) {
   const ipMsg = siValidationMsg(siIp, aalLimit, fulLimit);
 
   // --- Run engine for each SI field (DTH/TPD/IP) ---
-  // The engine uses sumInsured to derive everything. We pass each SI independently.
   const inputsDth: PremiumInputs = useMemo(
     () => ({ sumInsured: siDth, book, yearType, startDate, endDate }),
     [siDth, book, yearType, startDate, endDate],
@@ -177,9 +176,7 @@ export default function Section1(props: Section1Props) {
   const rTpd = useMemo(() => calculatePremium(inputsTpd), [inputsTpd]);
   const rIp = useMemo(() => calculatePremium(inputsIp), [inputsIp]);
 
-  // Status: use DTH result for overall status display (they share the same
-  // non-SI fields so status will be the same once SI is filled in any).
-  // We pick the first one that has a real SI, or DTH as fallback.
+  // Status: pick first result that has a SI entered
   const statusResult = siDth != null ? rDth : siTpd != null ? rTpd : rDth;
 
   return (
@@ -187,136 +184,75 @@ export default function Section1(props: Section1Props) {
       <div className="banner">Section 1 — Insurance Premium Calculation</div>
       <div className="panel">
 
-        {/* --- AAL / FUL Limits --- */}
-        <div className="subhead">Limits</div>
-        <div className="field-grid">
-          <label htmlFor="aalLimit">AAL Limit</label>
-          <MoneyInput
-            id="aalLimit"
-            value={aalLimitText}
-            onChange={setAalLimitText}
-            placeholder="Optional"
-          />
+        {/* --- Top sections in a 2×2 horizontal grid --- */}
+        <div className="top-grid">
+          {/* Column 1, Row 1: Limits */}
+          <div className="top-card">
+            <div className="card-title">Limits</div>
+            <div className="compact-grid">
+              <label htmlFor="aalLimit">AAL Limit</label>
+              <MoneyInput id="aalLimit" value={aalLimitText} onChange={setAalLimitText} placeholder="Optional" />
+              <label htmlFor="fulLimit">FUL Limit</label>
+              <MoneyInput id="fulLimit" value={fulLimitText} onChange={setFulLimitText} placeholder="Optional" />
+            </div>
+          </div>
 
-          <label htmlFor="fulLimit">FUL Limit</label>
-          <MoneyInput
-            id="fulLimit"
-            value={fulLimitText}
-            onChange={setFulLimitText}
-            placeholder="Optional"
-          />
+          {/* Column 2, Row 1: Sum Insured */}
+          <div className="top-card">
+            <div className="card-title">Sum Insured</div>
+            <div className="compact-grid">
+              <label htmlFor="siDth">SI_DTH</label>
+              <MoneyInput id="siDth" value={siDthText} onChange={setSiDthText} placeholder="e.g. 120,000" />
+              {dthMsg && (<><span /><div className="validation-msg">{dthMsg}</div></>)}
+              <label htmlFor="siTpd">SI_TPD</label>
+              <MoneyInput id="siTpd" value={siTpdText} onChange={setSiTpdText} placeholder="e.g. 60,000" />
+              {tpdMsg && (<><span /><div className="validation-msg">{tpdMsg}</div></>)}
+              <label htmlFor="siIp">SI_IP</label>
+              <MoneyInput id="siIp" value={siIpText} onChange={setSiIpText} placeholder="e.g. 36,000" />
+              {ipMsg && (<><span /><div className="validation-msg">{ipMsg}</div></>)}
+            </div>
+          </div>
+
+          {/* Column 1, Row 2: Annual Premium */}
+          <div className="top-card">
+            <div className="card-title">Annual Premium</div>
+            <div className="compact-grid">
+              <label>AP_DTH</label>
+              <ReadOnly value={apDth != null ? fmt2(apDth) : ''} />
+              <label>AP_TPD</label>
+              <ReadOnly value={apTpd != null ? fmt2(apTpd) : ''} />
+              <label>AP_IP</label>
+              <ReadOnly value={apIp != null ? fmt2(apIp) : ''} />
+            </div>
+          </div>
+
+          {/* Column 2, Row 2: Premium Calculation */}
+          <div className="top-card">
+            <div className="card-title">Premium Calculation</div>
+            <div className="compact-grid">
+              <label htmlFor="book">Calculation Book</label>
+              <select id="book" className="field input" value={book} onChange={(e) => setBook(e.target.value as CalculationBook)}>
+                <option value="Smooth">Smooth</option>
+                <option value="By Day">By Day</option>
+              </select>
+              <label htmlFor="yearType">Year Type</label>
+              <select id="yearType" className="field input" value={yearType} onChange={(e) => setYearType(e.target.value as YearType)}>
+                <option value="Leap Year">Leap Year</option>
+                <option value="Non-Leap Year">Non-Leap Year</option>
+              </select>
+              <label htmlFor="start">Start Date</label>
+              <input id="start" className="field input" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              <label htmlFor="end">End Date</label>
+              <input id="end" className="field input" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              <label>Days in Year</label>
+              <ReadOnly value={rDth.daysInYear == null ? '' : String(rDth.daysInYear)} />
+              <label>Days Selected</label>
+              <ReadOnly value={rDth.daysSelected == null ? '' : String(rDth.daysSelected)} />
+            </div>
+          </div>
         </div>
 
-        {/* --- Sum Insured (DTH / TPD / IP) --- */}
-        <div className="subhead">Sum Insured</div>
-        <div className="field-grid">
-          <label htmlFor="siDth">SI_DTH</label>
-          <MoneyInput
-            id="siDth"
-            value={siDthText}
-            onChange={setSiDthText}
-            placeholder="e.g. 120,000.00"
-          />
-          {dthMsg && (
-            <>
-              <span />
-              <div className="validation-msg">{dthMsg}</div>
-            </>
-          )}
-
-          <label htmlFor="siTpd">SI_TPD</label>
-          <MoneyInput
-            id="siTpd"
-            value={siTpdText}
-            onChange={setSiTpdText}
-            placeholder="e.g. 60,000.00"
-          />
-          {tpdMsg && (
-            <>
-              <span />
-              <div className="validation-msg">{tpdMsg}</div>
-            </>
-          )}
-
-          <label htmlFor="siIp">SI_IP</label>
-          <MoneyInput
-            id="siIp"
-            value={siIpText}
-            onChange={setSiIpText}
-            placeholder="e.g. 36,000.00"
-          />
-          {ipMsg && (
-            <>
-              <span />
-              <div className="validation-msg">{ipMsg}</div>
-            </>
-          )}
-        </div>
-
-        {/* --- Annual Premium (DTH / TPD / IP) — read-only --- */}
-        <div className="subhead">Annual Premium</div>
-        <div className="field-grid">
-          <label>AP_DTH</label>
-          <ReadOnly value={apDth != null ? fmt2(apDth) : ''} />
-
-          <label>AP_TPD</label>
-          <ReadOnly value={apTpd != null ? fmt2(apTpd) : ''} />
-
-          <label>AP_IP</label>
-          <ReadOnly value={apIp != null ? fmt2(apIp) : ''} />
-        </div>
-
-        {/* --- Premium Calculation --- */}
-        <div className="subhead">Premium Calculation</div>
-        <div className="field-grid">
-          <label htmlFor="book">Calculation Book</label>
-          <select
-            id="book"
-            className="field input"
-            value={book}
-            onChange={(e) => setBook(e.target.value as CalculationBook)}
-          >
-            <option value="Smooth">Smooth</option>
-            <option value="By Day">By Day</option>
-          </select>
-
-          <label htmlFor="yearType">Year Type</label>
-          <select
-            id="yearType"
-            className="field input"
-            value={yearType}
-            onChange={(e) => setYearType(e.target.value as YearType)}
-          >
-            <option value="Leap Year">Leap Year</option>
-            <option value="Non-Leap Year">Non-Leap Year</option>
-          </select>
-
-          <label htmlFor="start">Start Date</label>
-          <input
-            id="start"
-            className="field input"
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-          />
-
-          <label htmlFor="end">End Date</label>
-          <input
-            id="end"
-            className="field input"
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-          />
-
-          <label>Days in Year</label>
-          <ReadOnly value={rDth.daysInYear == null ? '' : String(rDth.daysInYear)} />
-
-          <label>Number of Days Selected</label>
-          <ReadOnly value={rDth.daysSelected == null ? '' : String(rDth.daysSelected)} />
-        </div>
-
-        {/* --- DTH / TPD / IP computed fields in a 4-column grid --- */}
+        {/* --- Calculated Values (DTH / TPD / IP) --- */}
         <div className="subhead">Calculated Values (DTH / TPD / IP)</div>
         <div className="triple-grid">
           <div className="triple-header" />
@@ -355,12 +291,12 @@ export default function Section1(props: Section1Props) {
           <ReadOnly value={numOrNa(rIp.difference)} />
         </div>
 
-        <div className="field-grid" style={{ marginTop: 12 }}>
+        <div className="compact-grid" style={{ marginTop: 10, maxWidth: 400 }}>
           <label>Status</label>
           <div className={`status ${statusResult.status.kind}`}>{statusResult.status.text}</div>
         </div>
 
-        {/* --- Month Calculation Helper with 3 sub-columns for Month Premium --- */}
+        {/* --- Month Calculation Helper --- */}
         <div className="subhead">Month Calculation Helper</div>
         <div className="table-scroll">
           <table>
