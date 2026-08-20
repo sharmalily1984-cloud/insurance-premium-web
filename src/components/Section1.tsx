@@ -67,10 +67,10 @@ function siValidationMsg(
 ): string | null {
   if (siValue == null || siValue <= 0) return null;
   if (aalLimit != null && siValue > aalLimit) {
-    return 'Sum Insured cannot exceed the AAL Limit. The remaining amount should go in an additional rider.';
+    return 'Sum Insured cannot exceed the Auto Acceptance Limit (AAL). The remaining amount should go in an additional rider.';
   }
   if (fulLimit != null && siValue > fulLimit) {
-    return 'Sum Insured exceeds the FUL Limit. The remaining amount must be provided through a new rider.';
+    return 'Sum Insured exceeds the Forward Underwriting Limit (FUL). The remaining amount must be provided through a new rider.';
   }
   return null;
 }
@@ -205,9 +205,9 @@ export default function Section1(props: Section1Props) {
           <div className="top-card">
             <div className="card-title">Limits</div>
             <div className="compact-grid">
-              <label htmlFor="aalLimit">AAL Limit</label>
+              <label htmlFor="aalLimit">Auto Acceptance Limit (AAL)</label>
               <MoneyInput id="aalLimit" value={aalLimitText} onChange={setAalLimitText} placeholder="Optional" />
-              <label htmlFor="fulLimit">FUL Limit</label>
+              <label htmlFor="fulLimit">Forward Underwriting Limit (FUL)</label>
               <MoneyInput id="fulLimit" value={fulLimitText} onChange={setFulLimitText} placeholder="Optional" />
             </div>
           </div>

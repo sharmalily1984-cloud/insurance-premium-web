@@ -7,23 +7,25 @@ export default function Instructions() {
 
         <h4>Limits (Optional)</h4>
         <p>
-          <strong>AAL Limit</strong> and <strong>FUL Limit</strong> are optional
-          numeric fields. When configured, they validate Sum Insured entries:
+          <strong>Auto Acceptance Limit (AAL)</strong> and{' '}
+          <strong>Forward Underwriting Limit (FUL)</strong> are optional numeric
+          fields. When configured, they validate Sum Insured entries:
         </p>
         <ul>
           <li>
-            <strong>AAL Limit</strong> — Sum Insured cannot exceed this value. If
-            exceeded, a message indicates the remaining amount should go in an
-            additional rider.
+            <strong>Auto Acceptance Limit (AAL)</strong> — Sum Insured cannot
+            exceed this value. If exceeded, a message indicates the remaining
+            amount should go in an additional rider.
           </li>
           <li>
-            <strong>FUL Limit</strong> — If Sum Insured exceeds this, a message
-            indicates the remaining amount must be provided through a new rider.
+            <strong>Forward Underwriting Limit (FUL)</strong> — If Sum Insured
+            exceeds this, a message indicates the remaining amount must be
+            provided through a new rider.
           </li>
         </ul>
         <p>
-          When both are blank, no validation applies and all fields behave as
-          normal.
+          AAL validation takes priority over FUL. When both fields are blank, no
+          limit validation applies and all fields behave as normal.
         </p>
 
         <h4>Sum Insured (DTH / TPD / IP)</h4>
@@ -42,7 +44,7 @@ export default function Instructions() {
 
         <h4>Annual Premium (DTH / TPD / IP)</h4>
         <p>
-          Calculated automatically and displayed as read-only:
+          Calculated automatically (read-only) as Sum Insured ÷ 12:
         </p>
         <ul>
           <li>AP_DTH = SI_DTH ÷ 12</li>
@@ -78,15 +80,17 @@ export default function Instructions() {
         <ul>
           <li><strong>Annual Daily Premium</strong> = Annual Premium ÷ Days in Year</li>
           <li><strong>Monthly Premium</strong> = Annual Premium ÷ 12</li>
-          <li><strong>Calculated Premium</strong> = sum of the 12 month premiums</li>
-          <li><strong>Smooth Method / By Day Method / Difference</strong> — comparison fields</li>
+          <li><strong>Calculated Premium</strong> = sum of all month premiums from Start to End</li>
+          <li><strong>Smooth Method</strong> = Calculated Premium when book is Smooth, else N/A</li>
+          <li><strong>By Day Method</strong> = Calculated Premium when book is By Day, else N/A</li>
         </ul>
 
         <h4>Month Calculation Helper</h4>
         <p>
-          The table always shows 12 rows starting from the month of the Start
-          Date. The <strong>Month Premium</strong> column contains three
-          sub-columns (DTH, TPD, IP) — each calculated from its respective
+          The table shows all months from Start Date to End Date (minimum 12
+          rows). When the range exceeds 12 months, pagination is provided with
+          12 rows per page. The <strong>Month Premium</strong> column contains
+          three sub-columns (DTH, TPD, IP) — each calculated from its respective
           Annual Premium.
         </p>
 
