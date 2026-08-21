@@ -7,18 +7,18 @@ export default function Instructions() {
 
         <h4>Limits (Optional)</h4>
         <p>
-          <strong>Auto Acceptance Limit (AAL)</strong> and{' '}
-          <strong>Forward Underwriting Limit (FUL)</strong> are optional numeric
+          <strong>AAL Limit</strong> and{' '}
+          <strong>FUL Limit</strong> are optional numeric
           fields. When configured, they validate Sum Insured entries:
         </p>
         <ul>
           <li>
-            <strong>Auto Acceptance Limit (AAL)</strong> — Sum Insured cannot
+            <strong>AAL Limit</strong> — Sum Insured cannot
             exceed this value. If exceeded, a message indicates the remaining
             amount should go in an additional rider.
           </li>
           <li>
-            <strong>Forward Underwriting Limit (FUL)</strong> — If Sum Insured
+            <strong>FUL Limit</strong> — If Sum Insured
             exceeds this, a message indicates the remaining amount must be
             provided through a new rider.
           </li>
